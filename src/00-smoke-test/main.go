@@ -10,24 +10,32 @@ import (
 const TCP_PORT = 25565
 
 func main() {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", TCP_PORT))
+	StartServer(TCP_PORT)
+}
+
+func StartServer(port int) {
+	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		fmt.Println("listen: ", err.Error())
 		os.Exit(1)
 	}
-	fmt.Printf("listening on port %d\n", TCP_PORT)
+
+	fmt.Printf("listening on port %d\n", port)
+
 	for {
 		conn, err := ln.Accept()
 		if err != nil {
 			fmt.Println("accept: ", err.Error())
 			os.Exit(1)
 		}
+
 		fmt.Println("connection from ", conn.RemoteAddr())
-		go handle(conn)
+
+		go HandleConnection(conn)
 	}
 }
 
-func handle(conn net.Conn) {
+func HandleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	if _, err := io.Copy(conn, conn); err != nil {
