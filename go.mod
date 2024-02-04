@@ -1,4 +1,4 @@
-module finwarman/protohackers
+module github.com/finwarman/protohackers
 
 go 1.21.6
 
