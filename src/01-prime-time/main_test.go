@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strings"
 	"testing"
 	"time"
 )
@@ -23,18 +24,47 @@ func TestEchoServer(t *testing.T) {
 	}
 	defer conn.Close()
 
-	// Send a message
-	message := "Hello, server!\n"
-	fmt.Print(conn, message)
+	// List of tests of format message: {"method":"isPrime","number":19809878}
+	// response: "true", "false", "malformed"
+	tests := []struct {
+		message  string
+		expected string
+	}{
+		// Data to Send, Expected Response Type
+		{"{\"method\":\"isPrime\",\"number\":13441}\n", "true"},
+		{"{\"method\":\"isPrime\",\"number\":12659}\n", "true"},
+		{"{\"method\":\"isPrime\",\"number\":12241}\n", "true"},
 
-	// Read the response
-	response, err := bufio.NewReader(conn).ReadString('\n')
-	if err != nil {
-		t.Fatalf("Failed to read from connection: %v", err)
+		{"{\"method\":\"isPrime\",\"number\":123456}\n", "false"},
+		{"{\"method\":\"isPrime\",\"number\":-1}\n", "false"},
+		{"{\"method\":\"isPrime\",\"number\":-13441}\n", "false"},
+		{"{\"method\":\"isPrime\",\"number\":7.123}\n", "false"},
+		{"{\"method\":\"isPrime\",\"number\":13441.123}\n", "false"},
+
+		{"{\"method\":\"isPrime\",\"number\":\"abc\"}\n", "malformed"},
+		{"{\"method\":\"something\",\"number\":\"abc\"}\n", "malformed"},
+		{"{\"method\":\"isPrime\",\"number\":\"123\"}\n", "malformed"},
+		{"{method, isPrime, number, 13441}\n", "malformed"},
 	}
 
-	// Check if the response matches the message
-	if response != message {
-		t.Fatalf("Expected '%s', got '%s'", message, response)
+	for _, test := range tests {
+		// Send a message
+		fmt.Fprint(conn, test.message)
+
+		// Read the response
+		response, err := bufio.NewReader(conn).ReadString('\n')
+		if err != nil {
+			t.Fatalf("Failed to read from connection: %v", err)
+		}
+
+		// Check if the response matches the expected value
+		if test.expected == "malformed" {
+			if !strings.Contains(response, "[]") {
+				t.Fatalf("Expected malformed message, got '%s'", response)
+			}
+		} else if !strings.Contains(response, test.expected) {
+			fmt.Printf("Sent data: %s\n", test.message)
+			t.Fatalf("Expected to contain '%s', got '%s'", test.expected, response)
+		}
 	}
 }

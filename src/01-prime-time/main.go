@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"math/big"
 	"net"
 	"os"
+	"strings"
 
 	"github.com/finwarman/protohackers/src/lib/json"
 )
@@ -17,7 +19,7 @@ func main() {
 }
 
 func StartServer(port int) {
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	ln, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		fmt.Println("listen: ", err.Error())
 		os.Exit(1)
@@ -44,12 +46,12 @@ func HandleConnection(conn net.Conn) {
 	defer conn.Close()
 
 	// Buffer for storing received data
-	buf := make([]byte, 32768)
+	reader := bufio.NewReader(conn)
 
 	// While connection is open, check for data to read
 	for {
-		// If there is data to read, place it into the buffer
-		n, err := conn.Read(buf)
+		// Read data until newline character
+		data, err := reader.ReadString('\n')
 		if err != nil {
 			if err != io.EOF {
 				fmt.Println("read error:", err.Error())
@@ -57,15 +59,18 @@ func HandleConnection(conn net.Conn) {
 			break
 		}
 
-		// [Debug] Print recieved data to STDOUT
-		data := buf[:n]
-		fmt.Printf("received: %s\n", string(data))
+		// Trim newline character
+		data = strings.TrimSuffix(data, "\n")
 
-		response := handleJSON(string(data))
+		// [Debug] Print received data to STDOUT
+		fmt.Printf("received: %s\n", data)
+
+		// Handle JSON request
+		response := handleJSON(data)
 		fmt.Printf("sending response: %s\n", response)
 
-		// Echo the data back to the client
-		if _, err := conn.Write(response); err != nil {
+		// Send response, terminated with newline
+		if _, err := conn.Write([]byte(string(response) + "\n")); err != nil {
 			fmt.Println("write error:", err.Error())
 			break
 		}
@@ -81,7 +86,8 @@ var MALFORMED_RESPONSE []byte = []byte("[]")
 //   - Type of `/number` is number
 //   - Extraneous fields are ignored
 //
-// Uses the JSON parser `github.comfinwarman/prothacker/`
+// Uses the JSON parser `github.comfinwarman/protohacker/src/lib/json` -
+// a minimal parser written as a learning exercise for this project.
 //
 // Response format:
 //
@@ -117,6 +123,19 @@ func handleJSON(data string) []byte {
 		fmt.Printf("got method: %s\n", method)
 	}
 
+	// validate method used
+	if method != "isPrime" {
+		fmt.Println("`/method` was not `isPrime`")
+		return MALFORMED_RESPONSE
+	}
+
+	// wrong number format, but not malformed
+	float, ok := parsedValueMap["number"].(float64)
+	if ok {
+		fmt.Printf("`/number` was a float %f, not int\n", float)
+		return []byte("{\"method\":\"isPrime\",\"prime\":false}")
+	}
+
 	// get parsedValueMap["number"] int
 	number, ok := parsedValueMap["number"].(int)
 	if !ok {
@@ -128,7 +147,7 @@ func handleJSON(data string) []byte {
 
 	// return properly-formed response
 	isPrime := big.NewInt(int64(number)).ProbablyPrime(0)
-	returnJSONStr := fmt.Sprintf("{\"method\":\"isPrime\",\"prime\":%t}\n", isPrime)
+	returnJSONStr := fmt.Sprintf("{\"method\":\"isPrime\",\"prime\":%t}", isPrime)
 
 	return []byte(returnJSONStr)
 }
