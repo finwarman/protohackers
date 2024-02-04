@@ -25,7 +25,7 @@ func TestEchoServer(t *testing.T) {
 
 	// Send a message
 	message := "Hello, server!\n"
-	fmt.Fprintf(conn, message)
+	fmt.Print(conn, message)
 
 	// Read the response
 	response, err := bufio.NewReader(conn).ReadString('\n')
