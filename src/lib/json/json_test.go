@@ -1,8 +1,10 @@
 package json
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -20,7 +22,7 @@ func boolPtr(b bool) *Boolean {
 }
 
 func TestBasicParsing(t *testing.T) {
-	parsedValue, err := ParseJSON("{\"method\":\"isPrime\",\"number\":970747}")
+	parsedValue, err := ParseJSON("{\"method\":\"isPrime\",\"number\":970747,\"negative\":-100}")
 	if err != nil {
 		t.Fatalf("Parsing Error:\n%v\n\n", err)
 	}
@@ -37,6 +39,10 @@ func TestBasicParsing(t *testing.T) {
 				{
 					Key:   "number",
 					Value: &JSONValue{Number: floatPtr(970747)},
+				},
+				{
+					Key:   "negative",
+					Value: &JSONValue{Number: floatPtr(-100)},
 				},
 			},
 		},
@@ -68,7 +74,7 @@ func TestMultilineParsing(t *testing.T) {
 				},
 				{
 					Key:   "number",
-					Value: &JSONValue{Number: floatPtr(970747)},
+					Value: &JSONValue{Number: floatPtr(-970747)},
 				},
 			},
 		},
@@ -119,7 +125,7 @@ func TestNestedArrayObjectParsing(t *testing.T) {
 						},
 					},
 				},
-				&JSONValue{
+				{
 					Array: &JSONArray{
 						Values: []*JSONValue{
 							{
@@ -167,5 +173,45 @@ func TestNestedArrayObjectParsing(t *testing.T) {
 	if !reflect.DeepEqual(parsedValue, expectedValue) {
 		t.Errorf("Parsed JSON does not match the expected structure."+
 			"\nGot:\n%v\n\nExpected:\n%v", parsedValue, expectedValue)
+	}
+}
+
+func TestNativeObjectConversion(t *testing.T) {
+	parsedValue, err := ParseJSON(`
+	[
+		{
+			"method": "foobar",
+			"number": 100000
+		},
+		[
+			{ "values": [1, 2] },
+			"barfoo",
+			true,
+			false,
+			null,
+			1234,
+			1000.25
+		]
+	]
+	`)
+	if err != nil {
+		t.Fatalf("Parsing Error:\n %v\n\n", err)
+	}
+
+	nativeMap := convertToNative(parsedValue)
+
+	// Convert to native value and pretty-print (using json, sacrilege!)
+	prettyJSON, err := json.MarshalIndent(nativeMap, "", "    ")
+	if err != nil {
+		t.Fatalf("Failed to generate json: %s", err)
+	}
+
+	gotFlat := strings.ReplaceAll(string(prettyJSON), "\n", "")
+	gotFlat = strings.ReplaceAll(gotFlat, " ", "")
+
+	expectedString := `[{"method":"foobar","number":100000},[{"values":[1,2]},"barfoo",true,false,null,1234,1000.25]]`
+
+	if gotFlat != expectedString {
+		t.Fatalf("Generated JSON does not match expected value:\ngot: %s\nexpected (flattened): %s\n", string(prettyJSON), expectedString)
 	}
 }

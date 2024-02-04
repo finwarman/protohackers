@@ -7,6 +7,8 @@ import (
 	participle "github.com/alecthomas/participle/v2"
 )
 
+// trunk-ignore-all(golangci-lint/govet)
+
 // A custom (basic) json parser, for use in `finwarman/protohackers`
 // This was an exercise just for fun! It's not fast, fully-featured, etc.
 
@@ -17,7 +19,7 @@ type JSONValue struct {
 	Object *JSONObject `@@`
 	Array  *JSONArray  `| @@`
 	Str    *string     `| @String`
-	Number *float64    `| @Float | @Int`
+	Number *float64    `| @("-"? Float) | @("-"? Int)`
 	Bool   *Boolean    `| @("true" | "false")`
 	Null   *string     `| @"null"`
 }
@@ -49,6 +51,39 @@ func ParseJSON(input string) (*JSONValue, error) {
 
 	value, err := parser.ParseString("", input)
 	return value, err
+}
+
+func convertToNative(j *JSONValue) interface{} {
+	if j == nil {
+		return nil
+	}
+	if j.Object != nil {
+		result := make(map[string]interface{})
+		for _, pair := range j.Object.Pairs {
+			result[pair.Key] = convertToNative(pair.Value)
+		}
+		return result
+	}
+	if j.Array != nil {
+		var result []interface{}
+		for _, value := range j.Array.Values {
+			result = append(result, convertToNative(value))
+		}
+		return result
+	}
+	if j.Str != nil {
+		return *j.Str
+	}
+	if j.Number != nil {
+		return *j.Number
+	}
+	if j.Bool != nil {
+		return bool(*j.Bool)
+	}
+	if j.Null != nil {
+		return nil
+	}
+	return nil
 }
 
 // Define boolean type to parse booleans - default 'bool' behaviour
