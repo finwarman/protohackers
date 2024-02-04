@@ -53,21 +53,21 @@ func ParseJSON(input string) (*JSONValue, error) {
 	return value, err
 }
 
-func convertToNative(j *JSONValue) interface{} {
+func ConvertToNative(j *JSONValue) interface{} {
 	if j == nil {
 		return nil
 	}
 	if j.Object != nil {
 		result := make(map[string]interface{})
 		for _, pair := range j.Object.Pairs {
-			result[pair.Key] = convertToNative(pair.Value)
+			result[pair.Key] = ConvertToNative(pair.Value)
 		}
 		return result
 	}
 	if j.Array != nil {
 		var result []interface{}
 		for _, value := range j.Array.Values {
-			result = append(result, convertToNative(value))
+			result = append(result, ConvertToNative(value))
 		}
 		return result
 	}

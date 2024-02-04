@@ -198,7 +198,7 @@ func TestNativeObjectConversion(t *testing.T) {
 		t.Fatalf("Parsing Error:\n %v\n\n", err)
 	}
 
-	nativeMap := convertToNative(parsedValue)
+	nativeMap := ConvertToNative(parsedValue)
 
 	// Convert to native value and pretty-print (using json, sacrilege!)
 	prettyJSON, err := json.MarshalIndent(nativeMap, "", "    ")
