@@ -75,7 +75,12 @@ func ConvertToNative(j *JSONValue) interface{} {
 		return *j.Str
 	}
 	if j.Number != nil {
-		return *j.Number
+		floatValue := *j.Number
+		// Check if the float is "int-y" (has no fractional part)
+		if floatValue == float64(int(floatValue)) {
+			return int(floatValue) // as integer
+		}
+		return floatValue // as float
 	}
 	if j.Bool != nil {
 		return bool(*j.Bool)
