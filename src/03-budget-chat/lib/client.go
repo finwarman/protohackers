@@ -1,4 +1,4 @@
-package main
+package budgetchat
 
 import "fmt"
 
@@ -17,10 +17,8 @@ type Client struct {
 
 // QueueMessage adds a message to the message queue for a client
 func (c *Client) QueueMessage(message Message) {
-	// TODO: actually handle message stuff
-	// fmt.Printf("%s(@%s) queueing message: '%s'\n", S_PREFIX, c.username, message.data)
-	fmt.Printf("(@%s) queueing message: '%s'\n", c.username, message.data)
+	fmt.Printf(S_PREFIX+"(@%s) queueing message: '%s'\n", c.username, message.data)
 
-	// Append the message to this client's message channel
+	// Push message to this client's message channel
 	c.msgChan <- message
 }

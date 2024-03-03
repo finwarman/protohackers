@@ -1,4 +1,4 @@
-package main
+package budgetchat
 
 import (
 	"bufio"
@@ -12,10 +12,13 @@ import (
 // Default tcp port for server
 const TCP_PORT = 25565
 
+// Character to indicate sent message is terminated
+const MSG_TERM = "\n"
+
 // Entry point
-func main() {
-	StartServer(TCP_PORT)
-}
+// func main() {
+// 	StartServer(TCP_PORT)
+// }
 
 // Run the server
 func StartServer(port int) {
@@ -67,7 +70,7 @@ func HandleConnection(conn net.Conn, broadcaster *Broadcaster, client *Client) {
 
 	// Initial connection message: get username
 	welcomeMsg := fmt.Sprintf("[id: %d] Welcome to fubChat! What is your username?", client.id)
-	if _, err := conn.Write([]byte(welcomeMsg + "\n")); err != nil {
+	if _, err := conn.Write([]byte(welcomeMsg + MSG_TERM)); err != nil {
 		fmt.Println(S_PREFIX+"write error:", err.Error())
 		return
 	}
@@ -162,7 +165,7 @@ func (c *Client) ProcessMessages(conn net.Conn) {
 			fmt.Printf("%s(@%s) sending message: '%s'\n", S_PREFIX, c.username, msg.data)
 
 			// Send the response
-			if _, err := conn.Write([]byte(msg.data + "\n")); err != nil {
+			if _, err := conn.Write([]byte(msg.data + MSG_TERM)); err != nil {
 				fmt.Println(S_PREFIX+"write error:", err.Error())
 				break
 			}
