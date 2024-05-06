@@ -1,7 +1,10 @@
 package main
 
-import "github.com/finwarman/protohackers/src/03-budget-chat/lib/budgetchat"
+import budgetchat "github.com/finwarman/protohackers/budgetchat/lib"
+
+const TCP_PORT = budgetchat.DEFAULT_TCP_PORT
 
 func main() {
-	StartServer(TCP_PORT)
+	// Start the server
+	budgetchat.StartServer(TCP_PORT)
 }

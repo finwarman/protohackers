@@ -13,7 +13,7 @@ import (
 const TEST_TCP_PORT = 44444
 
 // prefix for client log messages
-const C_PREFIX = ColorYellow + "[client]" + ColorReset + " "
+const C_PREFIX = ColourYellow + "[client]" + ColourReset + " "
 
 var TEST_CONNECT_STR = fmt.Sprintf("localhost:%d", TEST_TCP_PORT)
 

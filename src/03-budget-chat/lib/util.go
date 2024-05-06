@@ -12,18 +12,18 @@ import (
 
 // Colours for colourising log messages
 const (
-	ColorReset  = "\033[0m"
-	ColorRed    = "\033[31m"
-	ColorGreen  = "\033[32m"
-	ColorYellow = "\033[33m"
-	ColorBlue   = "\033[34m"
-	ColorPurple = "\033[35m"
-	ColorCyan   = "\033[36m"
-	ColorWhite  = "\033[37m"
+	ColourReset  = "\033[0m"
+	ColourRed    = "\033[31m"
+	ColourGreen  = "\033[32m"
+	ColourYellow = "\033[33m"
+	ColourBlue   = "\033[34m"
+	ColourPurple = "\033[35m"
+	ColourCyan   = "\033[36m"
+	ColourWhite  = "\033[37m"
 )
 
 // Prefix for server log messages
-const S_PREFIX = ColorCyan + "[server]" + ColorReset + " "
+const S_PREFIX = ColourCyan + "[server]" + ColourReset + " "
 
 //
 // === STRUCTS === //
@@ -68,4 +68,9 @@ func IsValidUsername(username string) bool {
 // NewIDGenerator creates a new instance of IDGenerator
 func NewIDGenerator() *IDGenerator {
 	return &IDGenerator{}
+}
+
+// Colourise returns a colourised string
+func Colourise(txt string, colourCode string) string {
+	return colourCode + txt + ColourReset
 }

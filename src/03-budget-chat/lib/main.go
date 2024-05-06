@@ -10,15 +10,10 @@ import (
 )
 
 // Default tcp port for server
-const TCP_PORT = 25565
+const DEFAULT_TCP_PORT = 25565
 
 // Character to indicate sent message is terminated
 const MSG_TERM = "\n"
-
-// Entry point
-// func main() {
-// 	StartServer(TCP_PORT)
-// }
 
 // Run the server
 func StartServer(port int) {
@@ -154,21 +149,5 @@ func HandleConnection(conn net.Conn, broadcaster *Broadcaster, client *Client) {
 		}
 
 		_, _ = broadcaster.Broadcast(msg, client)
-	}
-}
-
-// Example client message processing loop
-func (c *Client) ProcessMessages(conn net.Conn) {
-	// Continually read from message channel
-	for msg := range c.msgChan {
-		if len(msg.data) > 0 {
-			fmt.Printf("%s(@%s) sending message: '%s'\n", S_PREFIX, c.username, msg.data)
-
-			// Send the response
-			if _, err := conn.Write([]byte(msg.data + MSG_TERM)); err != nil {
-				fmt.Println(S_PREFIX+"write error:", err.Error())
-				break
-			}
-		}
 	}
 }
